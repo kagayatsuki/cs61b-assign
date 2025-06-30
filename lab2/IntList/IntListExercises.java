@@ -10,11 +10,11 @@ public class IntListExercises {
      */
     public static void addConstant(IntList lst, int c) {
         IntList head = lst;
-        while (head.rest != null) {
+        while (head != null) {
             head.first += c;
             head = head.rest;
         }
-    }
+    }//需要考虑最后一个节点
 
     /**
      * Part B: Buggy method that sets node.first to zero if
@@ -34,17 +34,18 @@ public class IntListExercises {
     }
 
     /** Returns the max value in the IntList starting at L. */
-    public static int max(IntList L) {
-        int max = L.first;
-        IntList p = L.rest;
+    public static int max(IntList L)
+    {  int max = L.first;
+        IntList p = L;
         while (p != null) {
-            if (p.first > max) {
-                max = p.first;
-            }
-            p = p.rest;
+        if (p.first > max) {
+            max = p.first;
         }
-        return max;
+            p = p.rest;
     }
+            return max;
+}
+
 
     /** Returns true if the last digit of x is equal to
      *  the first digit of x.
@@ -80,3 +81,7 @@ public class IntListExercises {
         return currElemIsPrime || squarePrimes(lst.rest);
     }
 }
+/*C部分：（有缺陷的）一种变异方法，它将整数列表（IntList）中的每个素数元素进行平方处理。
+*
+@param lst 来自课堂讲解的IntList
+@return 如果列表有更新则返回True*/

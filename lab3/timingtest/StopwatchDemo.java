@@ -16,7 +16,7 @@ public class StopwatchDemo {
         }
         return fib(n - 1) + fib(n - 2);
     }
-
+//时间复杂度O(2**n)
     public static void main(String[] args) {
         Stopwatch sw = new Stopwatch();
         int fib41 = fib(41);

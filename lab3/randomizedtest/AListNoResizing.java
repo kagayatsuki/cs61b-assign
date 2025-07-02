@@ -52,4 +52,12 @@ public class AListNoResizing<Item> {
         size = size - 1;
         return x;
     }
+    public void Resizing(int capacity) {
+        Item[] newItems = (Item[]) new Object[capacity];
+        for (int i = 0; i < size; i++) {
+            newItems[i] = items[i];
+        }
+        items = newItems;
+
+    }
 }

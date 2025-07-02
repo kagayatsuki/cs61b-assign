@@ -75,7 +75,7 @@ public class IntListExercises {
         boolean currElemIsPrime = Primes.isPrime(lst.first);
 
         if (currElemIsPrime) {
-            lst.first *= lst.first;
+            lst.first = lst.first * lst.first;
         }
 
         return currElemIsPrime || squarePrimes(lst.rest);

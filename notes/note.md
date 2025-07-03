@@ -53,3 +53,36 @@ public static boolean isPrime(int n) {
   }
   return res;
   }
+public class IntList {
+    public int first;
+    public IntList rest;
+
+    public IntList(int f, IntList r) {
+        this.first = f;
+        this.rest = r;
+    }
+
+    public static void evenOdd(IntList lst) {
+        if (lst==null||lst.rest==null) {
+            return;
+        }
+        IntList even = lst;
+        IntList oddhead = lst.rest;
+        IntList odd=oddhead;
+        while (even.rest!=null&&odd.rest!=null) {
+            even.rest=odd.rest;
+            even=odd.rest;
+            odd.rest=even.rest;
+            odd=even.rest;
+
+        }
+        even.rest=oddhead;
+
+    }
+}
+/*题目要求实现一个方法 `evenOdd`，通过改变给定的 `IntList` 的顺序，使得偶数索引的元素出现在奇数索引的元素之前。例如，如果
+`lst` 定义为 `IntList.list(0, 3, 1, 4, 2, 5)`，调用 `evenOdd(lst)` 后，`lst` 会被修改为 `IntList.list(0, 1, 2, 3, 4, 5)`。
+
+你需要通过修改链表的指针来实现这个方法，而不是创建一个新的链表。你的解决方案需要能够处理链表长度为奇数和偶数的情况。
+
+提示：确保你的解决方案对长度为奇数和偶数的链表都能正确工作。*/

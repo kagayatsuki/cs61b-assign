@@ -94,6 +94,6 @@ public class CheckLabConfig {
 
 		System.out.println("Your system appears to be configured correctly. You've completed lab 1 setup.");
 	}
-}
+};;
 
 

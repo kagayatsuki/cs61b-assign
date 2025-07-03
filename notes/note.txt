@@ -53,6 +53,7 @@ public static boolean isPrime(int n) {
   }
   return res;
   }
+  2.以下是一个链表的练习题，写了好久:)
 public class IntList {
     public int first;
     public IntList rest;

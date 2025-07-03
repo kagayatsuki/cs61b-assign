@@ -22,7 +22,33 @@ public class TimeAList {
     }
 
     public static void timeAListConstruction() {
-        // TODO: YOUR CODE HERE
+        AList<Integer> Ns = new AList<>();
+        AList<Double> times = new AList<>();
+        AList<Integer> opCounts = new AList<>();
 
+        // 测试列表大小：1000, 2000, 4000, ..., 128000
+        for (int N = 1000; N <= 128000; N *= 2) {
+            // 创建新的 AList
+            AList<Integer> list = new AList<>();
+
+            // 开始计时
+            Stopwatch timer = new Stopwatch();
+
+            // 执行 N 次 addLast 操作
+            for (int i = 0; i < N; i++) {
+                list.addLast(i);
+            }
+
+            // 记录耗时
+            double time = timer.elapsedTime();
+
+            // 存储结果
+            Ns.addLast(N);
+            times.addLast(time);
+            opCounts.addLast(N);
+        }
+
+        // 打印计时表
+        printTimingTable(Ns, times, opCounts);
     }
 }

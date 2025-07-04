@@ -86,4 +86,28 @@ public class IntList {
 
 你需要通过修改链表的指针来实现这个方法，而不是创建一个新的链表。你的解决方案需要能够处理链表长度为奇数和偶数的情况。
 
-提示：确保你的解决方案对长度为奇数和偶数的链表都能正确工作。*/
+提示：确保你的解决方案对长度为奇数和偶数的链表都能正确工作。*/（最后发现是力扣上面的原题，屑~）
+
+3.又是一道难题
+将一个链表lst均匀地分割成k个子链表，并将这些子链表存储在一个数组中返回。链表长度只能递减1. lst = 5 -> 4 -> 3 -> 2 -> 1 和 k = 2（目标：array[0] = 5 -> 3 -> 2, array[1] = 4 -> 1）
+（AI的解法）
+public static IntList[] partition(IntList lst, int k) {
+    IntList[] array = new IntList[k];
+    IntList[] tails = new IntList[k]; // 辅助数组，跟踪每个子链表的尾部
+    int index = 0;
+    IntList L = lst;
+    while (L != null) {
+        IntList next = L.rest; // 保存下一个节点
+        L.rest = null;         // 断开当前节点的链接
+        if (array[index] == null) {
+            array[index] = L;  // 如果子链表为空，设为头部
+        } else {
+            tails[index].rest = L; // 否则追加到尾部
+        }
+        tails[index] = L;      // 更新尾部指针
+        L = next;              // 移动到下一个节点
+        index = (index + 1) % k; // 循环到下一个子链表 ，使用取模保证了数组在k范围内循环添加，并且多余的部分添加到数组的前端，又学到了:)
+    }
+    return array;
+}
+//还是太吃理解了，唉唉~

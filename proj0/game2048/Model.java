@@ -3,9 +3,9 @@ package game2048;
 import java.util.Formatter;
 import java.util.Observable;
 
-
+//好想写一辈子的代码~~~
 /** The state of a game of 2048.
- *  @author TODO: YOUR NAME HERE
+ *  @author hyh
  */
 public class Model extends Observable {
     /** Current contents of the board. */
@@ -106,6 +106,9 @@ public class Model extends Observable {
      *    value, then the leading two tiles in the direction of motion merge,
      *    and the trailing tile does not.
      * */
+    public boolean canMerge(Tile a, Tile b) {
+        return a != null && b != null && a.value() == b.value();
+    }//辅助函数，判断能否融合
     public boolean tilt(Side side) {
         boolean changed;
         changed = false;
@@ -113,14 +116,127 @@ public class Model extends Observable {
         // TODO: Modify this.board (and perhaps this.score) to account
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
-
+        /*   I will use board.move,board.set_view  board.tile  */
+        board.setViewingPerspective(side);
+        boolean[][] has_merged = new boolean[2][4];
+        int row1= 2;//左下角是坐标原点
+        for (int col = 0; col < board.size(); col++) {
+            Tile t=board.tile(col, row1);
+            if(t==null) {
+                continue;
+            }
+            if (board.tile(col, row1+1)==null) {
+                changed = true;
+            }
+            if(secure_move(col,row1+1,t)){
+                changed = true;
+                score += board.tile(col,row1+1).value();
+                has_merged[0][col] = true;
+            }
+        }//遍历第二行，判断是否能与第一行合并，能合并返回true并加分
+        int row2= 1;
+        for (int col = 0; col < board.size(); col++) {
+            Tile t=board.tile(col, row2);
+            if(t==null) {
+                continue;
+            }
+            if (board.tile(col,2)==null) {
+                if(board.tile(col,3)==null) {
+                    changed = true;
+                    board.move(col,row2+2,t);
+                }else{
+                    if(!has_merged[0][col]) {
+                        if(secure_move(col,3,t)) {
+                            changed = true;
+                            score += board.tile(col, row2 + 2).value();
+                            has_merged[0][col] = true;
+                        }//这种情况涉及多merge
+                        else{
+                            changed = true;
+                            board.move(col,row2+1,t);
+                        }
+                    }else{
+                        changed = true;
+                        board.move(col,row2+1,t);
+                    }
+                }
+            }
+            else {
+                if (secure_move(col, row2 + 1, t)) {
+                    changed = true;
+                    score += board.tile(col, row2 + 1).value();
+                    has_merged[1][col] = true;
+                }
+            }
+        }//遍历第三行，判断是否能移至第一行,或者与第二行合并
+        int row3=0;
+        for (int col = 0; col < board.size(); col++) {
+            Tile t=board.tile(col, row3);
+            if(t==null) {
+                continue;
+            }
+            if (board.tile(col,1)==null) {
+                if(board.tile(col,2)==null) {
+                    if(board.tile(col,3)==null) {
+                        changed = true;
+                        board.move(col,row3+3,t);
+                    }else{
+                        changed = true;
+                        if(!has_merged[0][col]) {
+                            if (secure_move(col, row3 + 3, t)) {
+                                score += board.tile(col, row3 + 3).value();
+                            }else{
+                                board.move(col,row3+2,t);
+                            }
+                        }else{
+                            board.move(col,row3+2,t);
+                        }//这种情况涉及多merge
+                    }
+                }else{
+                    changed = true;
+                    if(!has_merged[1][col]) {
+                        if(secure_move(col,row3+2,t)){
+                            score += board.tile(col,row3+2).value();
+                        }else {
+                            board.move(col,row3+1,t);
+                        }
+                    }
+                    else{
+                        board.move(col,row3+1,t);
+                    }//这种情况涉及多merge
+                }
+            }else{
+                if(secure_move(col,row3+1,t)) {
+                    changed = true;
+                    score += board.tile(col,row3+1).value();
+                }
+            }
+        }//遍历第四行，判断是否能移至第一行,或者第二行,或者与第三行合并
         checkGameOver();
+        board.setViewingPerspective(Side.NORTH);
         if (changed) {
             setChanged();
         }
         return changed;
     }
-
+    private boolean secure_move(int col,int row,Tile b){
+        if(board.tile(col,row)==null) {
+            return board.move(col,row,b);
+        } else if (nulltozero(board.tile(col,row))==nulltozero(b)) {
+            return board.move(col,row,b);
+        }else {
+            return false;
+        }
+    }
+    private static int nulltozero(Tile t){
+        if(t==null) {
+            return 0;
+        }
+        else{
+            return t.value();
+        }
+    }
+//这里结束
     /** Checks if the game is over and sets the gameOver variable
      *  appropriately.
      */
@@ -137,7 +253,11 @@ public class Model extends Observable {
      *  Empty spaces are stored as null.
      * */
     public static boolean emptySpaceExists(Board b) {
-        // TODO: Fill in this function.
+        for(int row = 0; row < b.size(); row++) {
+            for(int col = 0; col < b.size(); col++) {
+                if(b.tile(row,col)==null) return true;
+            }
+        }
         return false;
     }
 
@@ -148,6 +268,11 @@ public class Model extends Observable {
      */
     public static boolean maxTileExists(Board b) {
         // TODO: Fill in this function.
+        for(int row = 0; row < b.size(); row++) {
+            for(int col = 0; col < b.size(); col++) {
+                if(b.tile(row,col)!=null&&b.tile(row,col).value()==MAX_PIECE) return true;
+            }
+        }
         return false;
     }
 
@@ -157,8 +282,55 @@ public class Model extends Observable {
      * 1. There is at least one empty space on the board.
      * 2. There are two adjacent tiles with the same value.
      */
+    public static boolean judge(Board b) {
+        for (int row = 0; row < b.size(); row++) {
+            for (int col = 0; col < b.size(); col++) {
+                Tile currentTile = b.tile(row, col);
+                if (currentTile == null) {
+                    continue; // 如果当前方块为空，跳过当前循环
+                }
+
+                // 检查上方相邻方块
+                if (row > 0) {
+                    Tile aboveTile = b.tile(row - 1, col);
+                    if (aboveTile != null && currentTile.value() == aboveTile.value()) {
+                        return true;
+                    }
+                }
+
+                // 检查下方相邻方块
+                if (row < b.size() - 1) {
+                    Tile belowTile = b.tile(row + 1, col);
+                    if (belowTile != null && currentTile.value() == belowTile.value()) {
+                        return true;
+                    }
+                }
+
+                // 检查左侧相邻方块
+                if (col > 0) {
+                    Tile leftTile = b.tile(row, col - 1);
+                    if (leftTile != null && currentTile.value() == leftTile.value()) {
+                        return true;
+                    }
+                }
+
+                // 检查右侧相邻方块
+                if (col < b.size() - 1) {
+                    Tile rightTile = b.tile(row, col + 1);
+                    if (rightTile != null && currentTile.value() == rightTile.value()) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
     public static boolean atLeastOneMoveExists(Board b) {
-        // TODO: Fill in this function.
+
+
+        if(emptySpaceExists(b)||judge(b)) {
+            return true;
+        }
         return false;
     }
 

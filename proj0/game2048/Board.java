@@ -101,7 +101,7 @@ public class Board implements Iterable<Tile> {
             values[pcol][prow] = tile.merge(pcol, prow, tile1);
             return true;
         }
-    }
+    }//将一个 Tile 移动到指定位置
 
     @Override
     /** Returns the board as a string, used for debugging. */

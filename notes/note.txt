@@ -1,0 +1,113 @@
+1. 费马小定理&&模幂算法
+
+用通俗的话来说：
+如果 ( p ) 是一个质数，选一个数 ( a )，只要 ( a ) 不是 ( p ) 的倍数，那么 ( a ) 的
+
+p−1次方除以 ( p )，余数一定是 1。
+
+public static boolean isPrime(int n) {
+    // Corner cases
+    if (n <= 1 || n == 4) return false;
+    if (n <= 3) return true;
+
+    int k = 3; // Try k = 3 times
+    while (k > 0)
+    {
+        // Pick a random number in [2..n-2]
+        // Above corner cases make sure that n > 4
+        int a = 2 + (int)(Math.random() % (n - 4));
+
+    // Fermat's little theorem
+        if (power(a, n - 1, n) != 1)
+            return false;
+
+    k--;
+    }
+
+    return true;
+}![](file:///C:\Users\ASUS\AppData\Local\Temp\ksohtml36312\wps1.jpg)![1751555301002](image/01/1751555301002.png)
+/**
+
+* This is a helper method to isPrime. You can ignore this method.
+* It is an iterative Function to calculate a^n mod p in log time
+* 
+* @source: https://www.geeksforgeeks.org/primality-test-set-2-fermet-method/
+  */
+  static int power(int a, int n, int p)
+  {
+  // Initialize result
+  int res = 1;
+
+  // Update 'a' if 'a' >= p
+  a = a % p;
+
+  while (n > 0)
+  {
+  // If n is odd, multiply 'a' with result
+  if ((n & 1) == 1)
+  res = (res * a) % p;
+
+  // n must be even now
+  n = n >> 1; // n = n/2
+  a = (a * a) % p;
+  }
+  return res;
+  }
+  2.以下是一个链表的练习题，写了好久:)
+public class IntList {
+    public int first;
+    public IntList rest;
+
+    public IntList(int f, IntList r) {
+        this.first = f;
+        this.rest = r;
+    }
+
+    public static void evenOdd(IntList lst) {
+        if (lst==null||lst.rest==null) {
+            return;
+        }
+        IntList even = lst;
+        IntList oddhead = lst.rest;
+        IntList odd=oddhead;
+        while (even.rest!=null&&odd.rest!=null) {
+            even.rest=odd.rest;
+            even=odd.rest;
+            odd.rest=even.rest;
+            odd=even.rest;
+
+        }
+        even.rest=oddhead;
+
+    }
+}
+/*题目要求实现一个方法 `evenOdd`，通过改变给定的 `IntList` 的顺序，使得偶数索引的元素出现在奇数索引的元素之前。例如，如果
+`lst` 定义为 `IntList.list(0, 3, 1, 4, 2, 5)`，调用 `evenOdd(lst)` 后，`lst` 会被修改为 `IntList.list(0, 1, 2, 3, 4, 5)`。
+
+你需要通过修改链表的指针来实现这个方法，而不是创建一个新的链表。你的解决方案需要能够处理链表长度为奇数和偶数的情况。
+
+提示：确保你的解决方案对长度为奇数和偶数的链表都能正确工作。*/（最后发现是力扣上面的原题，屑~）
+
+3.又是一道难题
+将一个链表lst均匀地分割成k个子链表，并将这些子链表存储在一个数组中返回。链表长度只能递减1. lst = 5 -> 4 -> 3 -> 2 -> 1 和 k = 2（目标：array[0] = 5 -> 3 -> 2, array[1] = 4 -> 1）
+（AI的解法）
+public static IntList[] partition(IntList lst, int k) {
+    IntList[] array = new IntList[k];
+    IntList[] tails = new IntList[k]; // 辅助数组，跟踪每个子链表的尾部
+    int index = 0;
+    IntList L = lst;
+    while (L != null) {
+        IntList next = L.rest; // 保存下一个节点
+        L.rest = null;         // 断开当前节点的链接
+        if (array[index] == null) {
+            array[index] = L;  // 如果子链表为空，设为头部
+        } else {
+            tails[index].rest = L; // 否则追加到尾部
+        }
+        tails[index] = L;      // 更新尾部指针
+        L = next;              // 移动到下一个节点
+        index = (index + 1) % k; // 循环到下一个子链表 ，使用取模保证了数组在k范围内循环添加，并且多余的部分添加到数组的前端，又学到了:)
+    }
+    return array;
+}
+//还是太吃理解了，唉唉~

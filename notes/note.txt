@@ -111,3 +111,24 @@ public static IntList[] partition(IntList lst, int k) {
     return array;
 }
 //还是太吃理解了，唉唉~
+4.一个接口的用例
+public int compareTo(Dog uddaDog) {
+        return this.size - uddaDog.size; // Natural ordering by size
+    }
+
+    private static class NameComparator implements Comparator<Dog> {
+        public int compare(Dog a, Dog b) {
+            return a.name.compareTo(b.name); // Compare by name using String's compareTo
+        }
+    }
+
+    public static Comparator<Dog> getNameComparator() {
+        return new NameComparator();
+    }
+}嵌套
+5.循环队列
+rear指向队尾的下一个位置
+1.front==rear，队列为空
+2.前部出队，front++，后部入队，rear++，
+3.超过容量，rear通过取模到最前面（rear=（rear+i）%size）（i是移动步数）
+4.front==（rear+1）%size时队列是满的

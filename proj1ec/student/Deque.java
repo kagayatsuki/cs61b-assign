@@ -13,8 +13,7 @@ public interface Deque<Item> {
     }
 
     int size();
-    void printDeque();
     Item removeFirst();
     Item removeLast();
     Item get(int index);
-}
+} void printDeque();

@@ -3,7 +3,6 @@ package gh2;
 /* Imports the required audio library from the
  * edu.princeton.cs.introcs package. */
 import edu.princeton.cs.introcs.StdAudio;
-
 import org.junit.Test;
 import static org.junit.Assert.*;
 

@@ -9,4 +9,5 @@ public interface Deque<T>{
     void printDeque();
     T removeFirst();
     T removeLast();
+    T get(int index);
 }

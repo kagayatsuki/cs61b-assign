@@ -1,5 +1,7 @@
 package deque;
 
+import gh2.GuitarHeroLite;
+import gh2.GuitarString;
 import org.junit.Test;
 import java.util.Comparator;
 
@@ -150,4 +152,6 @@ public class ArrayDequeTest {
         Comparator<Integer> reverseComparator = (a, b) -> b - a; // Reverse order
         assertEquals("Should return minimum value with reverse comparator", Integer.valueOf(1), mad1.max(reverseComparator));
     }
+
+
 }

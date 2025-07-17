@@ -3,13 +3,12 @@ package deque;
 import  java.util.Iterator;
 
 public class LinkedListDeque<T> implements Iterable <T>, Deque<T> {
-    class Node{
+    private class Node{
         T item;
         Node next;
         Node prev;
         Node(){};
         Node(T val){
-
             this.item = val;
         }
         Node(T val,Node next,Node prev){
@@ -95,7 +94,7 @@ public class LinkedListDeque<T> implements Iterable <T>, Deque<T> {
         }
         return helpRecursive(sentinel.next,index);
     }
-    public T helpRecursive(Node cur,int index){
+    private T helpRecursive(Node cur,int index){
         if(index==0){
             return cur.item;
         }

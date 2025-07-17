@@ -1,7 +1,7 @@
 package deque;
 import java.util.Comparator;
-
-public class ArrayDeque<T> implements Deque<T> {
+import java.util.Iterator;
+public class ArrayDeque<T> implements Deque<T> ,Iterable<T>{
    private T array [];
    private int size;
     private int front; // 前端第一个元素的索引
@@ -89,5 +89,25 @@ public class ArrayDeque<T> implements Deque<T> {
         array = newArray;
         front = 0;
         rear = size>0?size:0;
+    }
+    public Iterator<T> iterator(){
+        return new arraydequeiterator();
+    }
+    private class arraydequeiterator implements Iterator<T>{
+        private int i;
+        private int cur;
+        public arraydequeiterator() {
+            cur = front;
+            i=0;
+        }
+        public boolean hasNext(){
+            return i<size;
+        }
+        public T next(){
+            T item = array[cur];
+                    cur = (cur + 1) % array.length;
+                    i++;
+                    return item;
+        }
     }
 }

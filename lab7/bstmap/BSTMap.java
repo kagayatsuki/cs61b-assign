@@ -94,7 +94,7 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V>, Iterabl
     /** Removes the mapping for the specified key if present. Not required for Lab 7. */
     @Override
     public V remove(K key) {
-        if(key == null) throw new NullPointerException("key is null");
+        throw new UnsupportedOperationException("iterator() not implemented for Lab 7");
 
 
     }
@@ -102,7 +102,7 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V>, Iterabl
     /** Removes the mapping for the key if it maps to the specified value. Not required for Lab 7. */
     @Override
     public V remove(K key, V value) {
-
+        throw new UnsupportedOperationException("iterator() not implemented for Lab 7");
     }
 
     /** Returns an iterator over the keys in this map. Not required for Lab 7. */

@@ -1,9 +1,10 @@
 package bstmap;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
 
-public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V>, Iterable<K> {
+public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V>{
     private class Node {
         K key;
         V value;
@@ -94,7 +95,7 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V>, Iterabl
     /** Removes the mapping for the specified key if present. Not required for Lab 7. */
     @Override
     public V remove(K key) {
-        throw new UnsupportedOperationException("iterator() not implemented for Lab 7");
+        throw new UnsupportedOperationException("not implemented for Lab 7");
 
 
     }
@@ -102,12 +103,46 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V>, Iterabl
     /** Removes the mapping for the key if it maps to the specified value. Not required for Lab 7. */
     @Override
     public V remove(K key, V value) {
-        throw new UnsupportedOperationException("iterator() not implemented for Lab 7");
+        throw new UnsupportedOperationException("not implemented for Lab 7");
     }
 
     /** Returns an iterator over the keys in this map. Not required for Lab 7. */
     @Override
     public Iterator<K> iterator() {
-        throw new UnsupportedOperationException("iterator() not implemented for Lab 7");
+        return new BSTIterator();
+    }
+
+    private class BSTIterator implements Iterator<K> {
+        private int index;
+        private ArrayList<K> keys;
+        BSTIterator() {
+            index = 0;
+            keys = new ArrayList<>();
+        }
+        private void inorder(Node node, ArrayList<K> keys) {
+            if (node == null) return;
+            inorder(node.left, keys);
+            keys.add(node.key);
+            inorder(node.right, keys);
+        }
+        public boolean hasNext(){
+            return index < size();
+        }
+        public K next(){
+            return keys.get(index++);
+        }
+        public void remove(){
+            throw new UnsupportedOperationException("iterator() not implemented for Lab 7");
+        }
+    }
+    public void printInOrder() {
+        printInOrder(root);
+    }
+    private void printInOrder(Node node) {
+        if(node == null) return;
+        printInOrder(node.left);
+        System.out.print(node.key + " ");
+        printInOrder(node.right);
+
     }
 }

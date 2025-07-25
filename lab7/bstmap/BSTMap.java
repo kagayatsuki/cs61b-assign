@@ -119,12 +119,6 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V>{
             index = 0;
             keys = new ArrayList<>();
         }
-        private void inorder(Node node, ArrayList<K> keys) {
-            if (node == null) return;
-            inorder(node.left, keys);
-            keys.add(node.key);
-            inorder(node.right, keys);
-        }
         public boolean hasNext(){
             return index < size();
         }

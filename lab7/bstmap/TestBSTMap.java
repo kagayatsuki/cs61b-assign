@@ -78,7 +78,6 @@ public class TestBSTMap {
         b.put("hi", 1);
         assertTrue(b.containsKey("hi") && b.get("hi") != null);
     }
-
     //assumes put works
     @Test
     public void containsKeyNullTest() {
@@ -86,5 +85,4 @@ public class TestBSTMap {
         b.put("hi", null);
         assertTrue(b.containsKey("hi"));
     }
-
 }

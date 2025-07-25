@@ -28,10 +28,10 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
     private Collection<Node>[] buckets;//链表的集合
     // You should probably define some more!
     private int size;
-    public int initialSize;
-    public double maxSize;
-    public static final int capacity=16;
-    public static final double loadFactor = 0.75;
+    private int initialSize;
+    private double maxSize;
+    private static final int capacity=16;
+    private static final double loadFactor = 0.75;
     private Set<K> keySet;
     /** Constructors */
     public MyHashMap() {
@@ -53,7 +53,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
         this.buckets=createTable(initialSize);
         this.size=0;
         this.maxSize=maxLoad;
-
+        this.keySet=new HashSet<>();
     }
 
     /**
@@ -107,12 +107,13 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
     public void clear(){
         buckets=createTable(capacity);
         size=0;
-        keySet.clear();
+        keySet=new HashSet<>();
+
     };
 
     /* Returns true if this map contains a mapping for the specified key. */
     public boolean containsKey(K key){
-        if(key==null){throw new NullPointerException("key is null");}
+        if(key==null)return false;
         int index =getIndex(key);
         for(Node node : buckets[index]){
             if(node.key.equals(key)){
@@ -126,7 +127,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
      * map contains no mapping for the key.
      */
     public V get(K key){
-        if(key==null){throw new NullPointerException("key is null");}
+        if(key==null)return null;
         int index = getIndex(key);
         for(Node node : buckets[index]){
             if(node.key.equals(key)){
@@ -143,7 +144,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
 
     /* Associates the specified value with the specified key in this map. */
     public void put(K key, V value){
-        if(key==null){throw new NullPointerException("key is null");}
+        if(key==null) return;
         int index = getIndex(key);
         for(Node node : buckets[index]){
             if(node.key.equals(key)){
@@ -162,7 +163,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
         Collection<Node>[] oldBuckets = this.buckets;
         this.buckets = createTable(i);
         size=0;
-        keySet.clear();
+        keySet =new HashSet<>();
         for (Collection<Node> bucket : oldBuckets) {
             for (Node node : bucket) {
                 put(node.key, node.value);

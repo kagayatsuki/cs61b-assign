@@ -155,7 +155,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
         buckets[index].add(createNode(key,value));
         size++;
         keySet.add(key);
-        if(size/maxSize>maxSize){
+        if((double) size / buckets.length>maxSize){
             resize(buckets.length*2);
         }
     }

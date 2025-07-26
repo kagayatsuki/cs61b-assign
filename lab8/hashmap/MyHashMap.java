@@ -94,10 +94,10 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
      *
      * @param tableSize the size of the table to create
      */
-    private LinkedList<Node>[] createTable(int tableSize) {
-       LinkedList<Node>[] buckets = new LinkedList[tableSize];
+    private Collection<Node>[] createTable(int tableSize) {
+       Collection<Node>[] buckets = new Collection[tableSize];
        for (int i = 0; i < tableSize; i++) {
-           buckets[i] =(LinkedList<Node>) createBucket();//创建多个链表
+           buckets[i] =createBucket();//创建多个链表
        }
        return buckets;
     }

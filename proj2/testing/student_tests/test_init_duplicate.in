@@ -1,0 +1,7 @@
+# 测试重复运行 init 是否报错
+> init
+<<<
+
+> init
+A Gitlet version-control system already exists in the current directory.
+<<<

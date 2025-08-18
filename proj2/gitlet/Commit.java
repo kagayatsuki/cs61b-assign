@@ -2,7 +2,10 @@ package gitlet;
 
 // TODO: any imports you need here
 
-import java.util.Date; // TODO: You'll likely use this in this class
+import java.io.Serializable;
+import java.util.*;
+
+import static gitlet.Utils.sha1;
 
 /** Represents a gitlet commit object.
  *  TODO: It's a good idea to give a description here of what else this Class
@@ -10,7 +13,7 @@ import java.util.Date; // TODO: You'll likely use this in this class
  *
  *  @author TODO
  */
-public class Commit {
+public class Commit implements Serializable {
     /**
      * TODO: add instance variables here.
      *
@@ -21,6 +24,54 @@ public class Commit {
 
     /** The message of this Commit. */
     private String message;
-
+    private Date timestamp;
+    private List<String> parents;
+    private Map<String,String> blobs;//文件快照
+    private String id;
     /* TODO: fill in the rest of this class. */
+    public Commit(){
+        this.message = "initial commit";
+        this.timestamp = new Date(0);
+        this.parents = new LinkedList<>();
+        this.blobs = new HashMap<String,String>();
+        this.id = sha1(message,timestamp.toString());//生成哈希
+    }
+    public Commit(String message,List<Commit> parents,Stage stage){
+        this.message = message;
+        this.timestamp = new Date();//当前时间
+        this.parents =new ArrayList<>(2);
+        for(Commit p:parents){
+        this.parents.add(p.getId());
+        }
+        this.blobs=parents.get(0).getBlobs();
+
+        for (Map.Entry<String, String> item : stage.getAddedFiles().entrySet()) {
+            String filename = item.getKey();
+            String blobId = item.getValue();
+            blobs.put(filename, blobId);
+        }
+        for (String fileName :stage.getRemovedFiles()){
+            blobs.remove(fileName);
+        }
+        this.id = sha1(message,timestamp.toString(),parents.toString(),blobs.toString());
+    }
+
+
+
+    public String getId(){
+        return id;
+    }
+    public String getMessage(){
+        return message;
+    }
+    public Date getTimestamp(){
+        return timestamp;
+    }
+    public List<String> getParents(){
+        return parents;
+    }
+    public Map<String,String> getBlobs(){
+        return blobs;
+    }
+
 }

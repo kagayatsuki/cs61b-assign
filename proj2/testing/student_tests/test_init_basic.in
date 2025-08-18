@@ -1,0 +1,16 @@
+# 测试 init 命令是否创建正确文件和目录
+> init
+<<<
+
+# 检查 .gitlet 和子目录存在
+E .gitlet
+E .gitlet/commits
+E .gitlet/blobs
+E .gitlet/branches
+E .gitlet/staging
+E .gitlet/HEAD
+E .gitlet/staging/area
+E .gitlet/branches/master
+
+# 检查 HEAD 内容是 "master"
+= .gitlet/HEAD head_master.txt

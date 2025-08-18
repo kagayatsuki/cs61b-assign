@@ -110,7 +110,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
         keySet=new HashSet<>();
 
     };
-
+//Me go store quick for buying foods and drink with friend yesterday
     /* Returns true if this map contains a mapping for the specified key. */
     public boolean containsKey(K key){
         if(key==null)return false;

@@ -34,6 +34,7 @@ public class Repository {
     public static final File STAGING_FILE = join(GITLET_DIR, "staging");
     public static final File HEAD_FILE = join(GITLET_DIR, "HEAD");
     public static File STAGE= join(GITLET_DIR, "stage");
+    public static final int UID_LENGTH =40;
     /* TODO: fill in the rest of this class. */
     static void init(){
         if(GITLET_DIR.exists()&&GITLET_DIR.isDirectory()){
@@ -68,9 +69,11 @@ public class Repository {
             System.out.println("File does not exist");
             System.exit(0);
         }
-        //创建文件
+        //创建文件并写入文件夹
         Blob blob=new Blob(fileName,CWD);
         String blobId=blob.getId();
+        File blobFile = join(BLOBS_DIR, blobId);
+        writeObject(blobFile, blob);
 
         Stage stage = new Stage();
         if(STAGING_FILE.exists()){
@@ -137,8 +140,91 @@ public class Repository {
     writeObject(STAGING_FILE,stage);
     }
     public static void remove(String fileName){
+        File removedFile=join(CWD,fileName);
+
+        Commit headCommit=getHead();
+        Stage stage=readObject(STAGING_FILE,Stage.class);
+        //首先检查文件
+        boolean stagedForAdd = stage.getAddedFiles().containsKey(fileName);
+        boolean trackedInHead = headCommit.getBlobs().containsKey(fileName);
+        if(!stagedForAdd && !trackedInHead){
+            System.out.println("No reason to remove the file.");
+            System.exit(0);
+        }
+        //先获取再移除
+        if(stagedForAdd){
+            stage.getAddedFiles().remove(fileName);
+        }
+        //区别是下面的会把removedfiles添加，上面的不会
+        if(trackedInHead){
+            stage.removeFile(fileName);
+            if(removedFile.exists()){
+                Utils.restrictedDelete(removedFile);
+            }//安全删除
+        }
+        writeObject(STAGING_FILE,stage);
 
     }
+    public static void log(){
+        StringBuilder log=new StringBuilder();
+        Commit headCommit=getHead();
+        while(headCommit!=null){
+            log.append(headCommit.getCommitAsString());
+            if (headCommit.getParents() == null || headCommit.getParents().isEmpty()) {
+                break;
+            }
+            headCommit=getCommitFromId(headCommit.getParents().get(0));
+        }
+        System.out.println(log);
+    }
+    //checkout -- [file name]
+    public void checkoutFileFromHead(String fileName) {
+        Commit headCommit=getHead();
+        writeBlobFromCommit(fileName, headCommit);
+    }
+    //checkout [commit id] -- [file name]
+    public void checkoutFileFromCommitId(String commitId, String fileName) {
+        commitId=getFullCommitId(commitId);
+        Commit headCommit=getCommitFromId(commitId);
+        if(headCommit==null){
+            System.out.println("No commit with that id exists.");
+            System.exit(0);
+        }
+        writeBlobFromCommit(fileName, headCommit);
+    }
+
+    private void writeBlobFromCommit(String fileName, Commit headCommit) {
+        String blobId=headCommit.getBlobs().getOrDefault(fileName,"");
+        if(blobId.equals("")){
+            System.out.println("File does not exist in that commit.");
+            System.exit(0);
+        }
+        Blob blob=getBlobFromId(blobId);
+        File file=join(CWD,blob.getFileName());
+        writeContents(file,blob.getContent());
+    }
+
+    //checkout [branch name]
+    public void checkoutBranch(String branchName) {
+        File BranchFile=join(BRANCHES_DIR,branchName);
+        if(!BranchFile.exists()){
+            System.out.println("No such branch exists.");
+            System.exit(0);
+        }
+        String currentBranch=readContentsAsString(HEAD_FILE);
+        if(currentBranch.equals(BranchFile.getName())){
+            System.out.println("No need to checkout the current branch.");
+            System.exit(0);
+        }
+        //两个分支
+        Commit currentCommit=getCommitFromBranch(currentBranch);
+        Commit targetCommit=getCommitFromId(branchName);
+        
+    }
+   /**
+    * Below are some functions assist me in programming.
+    * */
+
     private static void writeCommitToFile(Commit commit) {
         File file = join(COMMITS_DIR, commit.getId());
         writeObject(file, commit);
@@ -164,4 +250,75 @@ public class Repository {
 
         return readObject(commitFile,Commit.class);
     }
+    private static Commit getCommitFromId(String commitId){
+        File commitFile=join(COMMITS_DIR,commitId);
+        if(!commitFile.exists()||commitId==null){
+            return null;
+        }
+        return readObject(commitFile,Commit.class);
+    }
+    private static Blob getBlobFromId(String blobId){
+        File blobFile=join(BLOBS_DIR,blobId);
+        if(!blobFile.exists()||blobId==null){
+            return null;
+        }
+        return readObject(blobFile,Blob.class);
+    }
+    public void checkEqual(String arg, String s) {
+        if (!s.equals(arg)) {
+            System.out.println("Incorrect operands.");
+            System.exit(0);
+        }
+    }
+    private Commit getCommitFromBranch(String branchName){
+        File branchFile=join(BRANCHES_DIR,branchName);
+        if(!branchFile.exists()){
+            System.out.println("No such branch exists.");
+            System.exit(0);
+        }
+        //检查是否为当前分支,若是，抛出错误
+        String currentBranch=readContentsAsString(HEAD_FILE);
+        if(currentBranch.equals(branchName)){
+            System.out.println("No need to checkout the current branch.");
+            System.exit(0);
+        }
+        String commitId=readContentsAsString(branchFile);
+        File commitFile=join(COMMITS_DIR,commitId);
+        if(!commitFile.exists()){
+            System.out.println("No such commit exists.");
+            System.exit(0);
+        }
+        return readObject(commitFile,Commit.class);
+    }
+
+    private String getFullCommitId(String commitId){
+        if(commitId.length()==UID_LENGTH){
+            return commitId;
+        }
+        //注意这里要先把目录序列提出来，而不是在下面for-each里面使用commitsFile.list()
+        String[] files = COMMITS_DIR.list();
+        if(files==null){
+            System.out.println("No commit files found.");
+            System.exit(0);
+        }
+        //File commitFile=join(COMMITS_DIR,commitId);
+        String fullCommitId=null;
+        int count=0;
+        for(String fileName : files){
+            if(fileName.startsWith(commitId)){
+                fullCommitId=fileName;
+                count++;
+            }
+        }
+        if(count==0){
+            throw new IllegalArgumentException("No commit with that id exists.");
+        }
+        if(count>=2){
+            throw new IllegalArgumentException("Too many commit ids.");
+        }
+        return fullCommitId;
+    }
+
+
+
 }

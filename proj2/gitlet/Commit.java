@@ -3,6 +3,10 @@ package gitlet;
 // TODO: any imports you need here
 
 import java.io.Serializable;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import static gitlet.Utils.sha1;
@@ -73,5 +77,16 @@ public class Commit implements Serializable {
     public Map<String,String> getBlobs(){
         return blobs;
     }
-
+    public String getCommitAsString(){
+        StringBuilder sb = new StringBuilder();
+        sb.append("===\n");
+        sb.append("commit "+this.id+"\n");
+        if(parents.size()==2) {
+            sb.append("Merge: "+parents.get(0).substring(0,7)+parents.get(1).substring(0,7)+"\n");
+        }//合并提交的情况
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        sb.append("Date: ").append(sdf.format(this.timestamp)).append("\n");
+        sb.append(this.getMessage()+"\n\n");
+        return sb.toString();
+    }
 }

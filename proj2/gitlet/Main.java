@@ -54,7 +54,28 @@ private static final Set<String> Operands=new HashSet<>(Set.of( "init", "add", "
                     System.exit(0);
                     }
                 remove(args[1]);
-
+                break;
+            case "log":
+                log();
+                break;
+            case "checkout":
+                if (args.length < 2||args.length > 4) {
+                    System.out.println("Incorrect operands.");
+                    System.exit(0);
+                }//2-4
+                if (args.length == 2) {
+                    // java gitlet.Main checkout [branch name]
+                    repo.checkoutBranch(args[1]);
+                } else if (args.length == 3) {
+                    // java gitlet.Main checkout -- [file name]
+                    repo.checkEqual(args[1], "--");
+                    repo.checkoutFileFromHead(args[2]);
+                } else if (args.length== 4) {
+                    // java gitlet.Main checkout [commit id] -- [file name]
+                    repo.checkEqual(args[2], "--");
+                    repo.checkoutFileFromCommitId(args[1], args[3]);
+                }
+                break;
             default:
                 System.out.println("Unknown command.");
                 System.exit(0);

@@ -3,6 +3,7 @@ package gitlet;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import static gitlet.Utils.*;
@@ -219,7 +220,37 @@ public class Repository {
         //两个分支
         Commit currentCommit=getCommitFromBranch(currentBranch);
         Commit targetCommit=getCommitFromId(branchName);
-        
+        //最难的一步，检查文件，使用map,如果原来的目录里面有新目录没有的文件，抛出错误
+        List<String> cwdFiles=plainFilenamesIn(CWD);
+        Map<String,String> currBlobs=currentCommit.getBlobs();
+        Map<String,String> targetBlobs=targetCommit.getBlobs();
+        for(String cwdFile:cwdFiles){
+            if(!currBlobs.containsKey(cwdFile)&&targetBlobs.containsKey(cwdFile)){
+                System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                System.exit(0);
+            }
+        }
+        //写入目标文件
+        for(String file:targetBlobs.keySet()){
+            Blob blob=getBlobFromId(file);
+            File file1=join(CWD,file);
+            writeContents(file1,blob.getContent());
+        }
+        //删除当前分支跟踪但目标分支不跟踪的文件
+        for(String file:currBlobs.keySet()){
+            if(!targetBlobs.containsKey(file)){
+                File file1=join(CWD,file);
+                if(file1.exists()){
+                    file1.delete();
+                }
+            }
+        }
+        //清除暂存区，记住！！！
+        Stage stage=new Stage();
+        writeObject(STAGING_FILE,stage);
+        //切换分支
+        writeContents(HEAD_FILE,branchName);
+
     }
    /**
     * Below are some functions assist me in programming.

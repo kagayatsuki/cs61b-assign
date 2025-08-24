@@ -34,28 +34,20 @@ private static final Set<String> Operands=new HashSet<>(Set.of( "init", "add", "
                 init();
                 break;
             case "add":
-                if (args.length < 2) {
-                    System.out.println("Please specify a file to add.");
-                    System.exit(0);}
+                repo.checkCommand(args.length,2);
                 add(args[1]);
                 break;
             // TODO: FILL THE REST IN
             case "commit":
-                if (args.length < 2) {
-                    System.out.println("Please specify a file to commit.");
-                    System.exit(0);
-
-                }
+                repo.checkCommand(args.length,2);
                 commit(args[1]);
                 break;
             case "rm":
-                if (args.length < 2) {
-                    System.out.println("Please specify a file to remove.");
-                    System.exit(0);
-                    }
+                repo.checkCommand(args.length,2);
                 remove(args[1]);
                 break;
             case "log":
+                repo.checkCommand(args.length,1);
                 log();
                 break;
             case "checkout":
@@ -75,6 +67,30 @@ private static final Set<String> Operands=new HashSet<>(Set.of( "init", "add", "
                     repo.checkEqual(args[2], "--");
                     repo.checkoutFileFromCommitId(args[1], args[3]);
                 }
+                break;
+            case "branch":
+                repo.checkCommand(args.length,2);
+                repo.branch(args[1]);
+                break;
+            case "rm-branch":
+                repo.checkCommand(args.length,2);
+                repo.reBranch(args[1]);
+                break;
+            case "reset":
+                repo.checkCommand(args.length,2);
+                repo.reset(args[1]);
+                break;
+            case "global-log":
+                repo.checkCommand(args.length,1);
+                repo.globalLog();
+                break;
+            case "find":
+                repo.checkCommand(args.length,2);
+                repo.find(args[1]);
+                break;
+            case "status":
+                repo.checkCommand(args.length,1);
+                repo.status();
                 break;
             default:
                 System.out.println("Unknown command.");

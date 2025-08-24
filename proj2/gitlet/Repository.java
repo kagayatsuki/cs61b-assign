@@ -122,7 +122,7 @@ public class Repository {
         System.out.println("File does not exist");
         System.exit(0);
     }
-    Commit head=getHead();
+    Commit head=getHeadCommit();
     List<Commit> parents=new ArrayList<>();
     parents.add(head);
     Stage stage=readObject(STAGING_FILE,Stage.class);
@@ -143,7 +143,7 @@ public class Repository {
     public static void remove(String fileName){
         File removedFile=join(CWD,fileName);
 
-        Commit headCommit=getHead();
+        Commit headCommit=getHeadCommit();
         Stage stage=readObject(STAGING_FILE,Stage.class);
         //首先检查文件
         boolean stagedForAdd = stage.getAddedFiles().containsKey(fileName);
@@ -168,7 +168,7 @@ public class Repository {
     }
     public static void log(){
         StringBuilder log=new StringBuilder();
-        Commit headCommit=getHead();
+        Commit headCommit=getHeadCommit();
         while(headCommit!=null){
             log.append(headCommit.getCommitAsString());
             if (headCommit.getParents() == null || headCommit.getParents().isEmpty()) {
@@ -178,9 +178,21 @@ public class Repository {
         }
         System.out.println(log);
     }
+    //和上面的逻辑一样
+    public void globalLog(){
+        StringBuilder log=new StringBuilder();
+        List<String>files=plainFilenamesIn(COMMITS_DIR);
+        for(String fileName:files){
+            Commit commit=getCommitFromId(fileName);
+            log.append(commit.getCommitAsString());
+        }
+        System.out.println(log);
+    }
+
+
     //checkout -- [file name]
     public void checkoutFileFromHead(String fileName) {
-        Commit headCommit=getHead();
+        Commit headCommit=getHeadCommit();
         writeBlobFromCommit(fileName, headCommit);
     }
     //checkout [commit id] -- [file name]
@@ -213,13 +225,61 @@ public class Repository {
             System.exit(0);
         }
         String currentBranch=readContentsAsString(HEAD_FILE);
-        if(currentBranch.equals(BranchFile.getName())){
+
+        if(branchName.equals(currentBranch)){
             System.out.println("No need to checkout the current branch.");
             System.exit(0);
         }
         //两个分支
+        String commitId=readContentsAsString(join(BRANCHES_DIR,currentBranch));
+        Commit currentCommit=getCommitFromId(commitId);
+        String targetCommitId=readContentsAsString(BranchFile);
+        selectFilesAndDelete(targetCommitId, currentCommit);
+        //切换分支
+        writeContents(HEAD_FILE,branchName);
+    }
+
+    public void branch(String branchName) {
+        File branchFile=join(BRANCHES_DIR,branchName);
+        if(branchFile.exists()){
+            System.out.println("A branch with that name already exists.");
+            System.exit(0);
+        }
+        String currentBranch=readContentsAsString(HEAD_FILE);
+        File currentBranchFile=join(BRANCHES_DIR,currentBranch);
+        String headCommitId=readContentsAsString(currentBranchFile);
+        writeContents(branchFile,headCommitId);
+    }
+    public void reBranch(String branchName) {
+        File branchFile=join(BRANCHES_DIR,branchName);
+        if (!branchFile.exists()) {
+            System.out.println("A branch with that name does not exist.");
+            System.exit(0);
+        }
+        String headCommitName=readContentsAsString(HEAD_FILE);
+        if(headCommitName.equals(branchName)){
+            System.out.println("Cannot remove the current branch.");
+        }
+        branchFile.delete();
+    }
+    public void reset(String commitId) {
+        File file=join(COMMITS_DIR,commitId);
+        if(!file.exists()){
+            System.out.println("No commit with that id exists.");
+            System.exit(0);
+        }
+        //branch->commit
+        String currentBranch=readContentsAsString(HEAD_FILE);
         Commit currentCommit=getCommitFromBranch(currentBranch);
-        Commit targetCommit=getCommitFromId(branchName);
+        selectFilesAndDelete(commitId, currentCommit);
+        //注意这里和上面不一样的
+        File branchFile=join(BRANCHES_DIR,currentBranch);
+        writeContents(branchFile,commitId);
+
+    }
+
+    private void selectFilesAndDelete(String commitId, Commit currentCommit) {
+        Commit targetCommit=getCommitFromId(commitId);
         //最难的一步，检查文件，使用map,如果原来的目录里面有新目录没有的文件，抛出错误
         List<String> cwdFiles=plainFilenamesIn(CWD);
         Map<String,String> currBlobs=currentCommit.getBlobs();
@@ -230,11 +290,14 @@ public class Repository {
                 System.exit(0);
             }
         }
-        //写入目标文件
+        //写入目标文件，注意blobId的处理以及加入的判断条件
         for(String file:targetBlobs.keySet()){
-            Blob blob=getBlobFromId(file);
+            String blobId=targetBlobs.get(file);
+            Blob blob=getBlobFromId(blobId);
             File file1=join(CWD,file);
-            writeContents(file1,blob.getContent());
+            if (blob != null) {
+                writeContents(file1, (Object) blob.getContent());
+            }
         }
         //删除当前分支跟踪但目标分支不跟踪的文件
         for(String file:currBlobs.keySet()){
@@ -248,38 +311,82 @@ public class Repository {
         //清除暂存区，记住！！！
         Stage stage=new Stage();
         writeObject(STAGING_FILE,stage);
-        //切换分支
-        writeContents(HEAD_FILE,branchName);
-
     }
-   /**
-    * Below are some functions assist me in programming.
-    * */
 
-    private static void writeCommitToFile(Commit commit) {
-        File file = join(COMMITS_DIR, commit.getId());
-        writeObject(file, commit);
-    }
-    private static Commit getHead(){
-        String branchName=readContentsAsString(HEAD_FILE);
-        if(!HEAD_FILE.exists()){
-            System.out.println("File does not exist: " + HEAD_FILE);
+    public void find(String message){
+        StringBuilder sb = new StringBuilder();
+        List<String> Files=plainFilenamesIn(COMMITS_DIR);
+        for(String file:Files){
+            Commit commit=getCommitFromId(file);
+            if(commit.getMessage().contains(message)){
+                sb.append(commit.getId()+"\n");
+            }
+        }
+        if(sb.length()==0){
+            System.out.println("Found no commit with that message.");
             System.exit(0);
         }
+        System.out.println(sb);
+    }
 
-        File branchFile = join(BRANCHES_DIR,branchName);
-        if (!branchFile.exists()) {
-            System.out.println("Branch file not found: " + branchName);
+    public void status(){
+        StringBuilder sb = new StringBuilder();
+        sb.append("=== Branches ===\n");
+        String headBranch=readContentsAsString(HEAD_FILE);
+        //先遍历，打印
+        List<String> branches=plainFilenamesIn(BRANCHES_DIR);
+        for(String branch:branches){
+            if(branch.equals(headBranch)){
+                sb.append("*"+branch+"\n");
+            }
+            else {
+                sb.append(branch+"\n");
+            }
+        }
+        sb.append("\n");
+        //    private Map<String, String> addedFiles;  文件名 -> blob SHA-1 ID，一一对应
+        //    private List<String> removedFiles;
+        sb.append("=== Staged Files ===\n");
+        Stage stage=readObject(STAGING_FILE,Stage.class);
+        for(String file:stage.getAddedFiles().keySet()){
+            sb.append(file+"\n");
+        }
+        sb.append("\n");
+
+        sb.append("=== Removed Files ===\n");
+        for (String file:stage.getRemovedFiles()){
+            sb.append(file+"\n");
+        }
+        sb.append("\n");
+
+
+        System.out.println(sb);
+    }
+    /**
+    * Below are some functions assist me in programming.
+    * */
+    private static Commit getCommitFromBranch(String branchName){
+        File branchFile=join(BRANCHES_DIR,branchName);
+        if(!branchFile.exists()){
+            System.out.println("No branch with that id exists.");
             System.exit(0);
         }
         String commitId=readContentsAsString(branchFile);
         File commitFile=join(COMMITS_DIR,commitId);
-        if (!commitFile.exists()) {
-            System.out.println("Commit file not found: " + commitId);
+        if(!commitFile.exists()){
+            System.out.println("No commit with that id does not exist.");
             System.exit(0);
         }
-
         return readObject(commitFile,Commit.class);
+
+    }
+    private static void writeCommitToFile(Commit commit) {
+        File file = join(COMMITS_DIR, commit.getId());
+        writeObject(file, commit);
+    }
+    private static Commit getHeadCommit() {
+        String branchName=readContentsAsString(HEAD_FILE);
+        return getCommitFromBranch(branchName);
     }
     private static Commit getCommitFromId(String commitId){
         File commitFile=join(COMMITS_DIR,commitId);
@@ -300,26 +407,6 @@ public class Repository {
             System.out.println("Incorrect operands.");
             System.exit(0);
         }
-    }
-    private Commit getCommitFromBranch(String branchName){
-        File branchFile=join(BRANCHES_DIR,branchName);
-        if(!branchFile.exists()){
-            System.out.println("No such branch exists.");
-            System.exit(0);
-        }
-        //检查是否为当前分支,若是，抛出错误
-        String currentBranch=readContentsAsString(HEAD_FILE);
-        if(currentBranch.equals(branchName)){
-            System.out.println("No need to checkout the current branch.");
-            System.exit(0);
-        }
-        String commitId=readContentsAsString(branchFile);
-        File commitFile=join(COMMITS_DIR,commitId);
-        if(!commitFile.exists()){
-            System.out.println("No such commit exists.");
-            System.exit(0);
-        }
-        return readObject(commitFile,Commit.class);
     }
 
     private String getFullCommitId(String commitId){
@@ -349,7 +436,12 @@ public class Repository {
         }
         return fullCommitId;
     }
-
+    public void checkCommand(int expect,int length) {
+        if(expect!=length){
+            System.out.println("Incorrect operands.");
+            System.exit(0);
+        }
+    }
 
 
 }

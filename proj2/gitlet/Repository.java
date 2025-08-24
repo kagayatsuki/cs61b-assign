@@ -1,10 +1,7 @@
 package gitlet;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 import static gitlet.Utils.*;
 
@@ -335,6 +332,7 @@ public class Repository {
         String headBranch=readContentsAsString(HEAD_FILE);
         //先遍历，打印
         List<String> branches=plainFilenamesIn(BRANCHES_DIR);
+        Collections.sort(branches);
         for(String branch:branches){
             if(branch.equals(headBranch)){
                 sb.append("*"+branch+"\n");
@@ -344,7 +342,7 @@ public class Repository {
             }
         }
         sb.append("\n");
-        //    private Map<String, String> addedFiles;  文件名 -> blob SHA-1 ID，一一对应
+        //    private Map<String, String> addedFiles; 文件名 -> blob SHA-1 ID，一一对应
         //    private List<String> removedFiles;
         sb.append("=== Staged Files ===\n");
         Stage stage=readObject(STAGING_FILE,Stage.class);
@@ -354,11 +352,66 @@ public class Repository {
         sb.append("\n");
 
         sb.append("=== Removed Files ===\n");
-        for (String file:stage.getRemovedFiles()){
+        List<String>result=stage.getRemovedFiles();
+        Collections.sort(result);
+        for (String file:result){
             sb.append(file+"\n");
         }
         sb.append("\n");
-
+        //跟踪但被修改或删除（即当前提交里有但内容不同或已删除，且未暂存）
+        sb.append("=== Modifications Not Staged For Commit ===\n");
+        List<String>cwdFiles=plainFilenamesIn(CWD);
+        List<String> targetFiles=new ArrayList<>();
+        //当前commit
+        Commit currentCommit=getCommitFromId(readContentsAsString(join(BRANCHES_DIR,headBranch)));
+        Map<String,String> currBlobs=currentCommit.getBlobs();
+        for(String file:currBlobs.keySet()) {
+            //逐个检查文件
+            File cwdFile = join(CWD, file);
+            //deleted and not stored
+            if (!cwdFiles.contains(file) && !stage.getRemovedFiles().contains(file)) {
+                targetFiles.add(file + " deleted");
+            }
+            //changed and not stored (not in add and remove)
+            if (cwdFiles.contains(file) && !stage.getRemovedFiles().contains(file) && !stage.getAddedFiles().containsKey(file)) {
+                byte[] cwdContent = readContents(cwdFile);
+                Blob stagedBlob = getBlobFromId(currBlobs.get(file));
+                if (stagedBlob != null && !cwdContent.equals(stagedBlob.getContent())) {
+                    targetFiles.add(file + " modified");
+                }//对比内容
+            }
+        }
+        //暂存添加但工作目录中内容不同或删除的文件
+        for (String file:stage.getAddedFiles().keySet()) {
+            File cwdFile = join(CWD, file);
+            if(!cwdFiles.contains(file)) {
+                targetFiles.add(file + " deleted");
+            }else{
+                Blob stagedBlob = getBlobFromId(stage.getAddedFiles().get(file));
+                byte[] cwdContent = readContents(cwdFile);
+                if(stagedBlob != null && !cwdContent.equals(stagedBlob.getContent())) {
+                    targetFiles.add(file + " modified");
+                }
+            }
+        }
+            Collections.sort(targetFiles);
+            for (String s:targetFiles){
+                sb.append(s+"\n");
+            }
+            sb.append("\n");
+            //工作目录中存在但未跟踪（不在当前提交或暂存区）的文件
+            sb.append("=== Untracked Files ===\n");
+            List<String> untrackedFiles=new ArrayList<>();
+            for(String file1:cwdFiles){
+                if(!currBlobs.containsKey(file1)&&!stage.getRemovedFiles().contains(file1)&&!stage.getAddedFiles().containsKey(file1)){
+                    untrackedFiles.add(file1);
+                }
+            }
+            Collections.sort(untrackedFiles);
+            for (String s:untrackedFiles){
+                sb.append(s+"\n");
+            }
+            sb.append("\n");
 
         System.out.println(sb);
     }

@@ -68,46 +68,29 @@ public class Repository {
             System.exit(0);
         }
         //创建文件并写入文件夹
-        Blob blob=new Blob(fileName,CWD);
+        //将文件内容序列化存储到 .gitlet/blobs/<SHA-1 ID>
+        Blob blob=new Blob(fileName,CWD);//本地文件
         String blobId=blob.getId();
         File blobFile = join(BLOBS_DIR, blobId);
-        writeObject(blobFile, blob);
-
-        Stage stage = new Stage();
-        if(STAGING_FILE.exists()){
-            stage=readObject(STAGING_FILE,Stage.class);
+        if(!blobFile.exists()){
+            writeObject(blobFile, blob);
         }
-        else {
-            stage=new Stage();
-        }
-
-        if (!HEAD_FILE.exists()) {
-            stage=new Stage();
-        }
-        String headBranch=readContentsAsString(HEAD_FILE);
-        File branchFile = join(BRANCHES_DIR,headBranch);
-        if (!branchFile.exists()) {
-            System.out.println("Branch file not found: " + headBranch);
-            System.exit(0);
-        }
-
-        String commitId=readContentsAsString(branchFile);
-        Commit headCommit =readObject(join(COMMITS_DIR,commitId),Commit.class);//读取提交文件
-
-        String headBlobId=headCommit.getBlobs().getOrDefault(fileName,"");
-        String stageId=stage.getAddedFiles().getOrDefault(fileName,"");
-
-        //检查文件
-        if (blobId.equals(headBlobId)) {
-            if (!blobId.equals(stageId)) {
-                stage.removeFile(fileName);
-                writeObject(STAGING_FILE, stage);
-            }
-        } else if (!blobId.equals(stageId)) {
+        //将文件名和 blob SHA-1 ID 添加到暂存区的 `addedFiles` ,如果文件已暂存，覆盖之前的暂存内容
+        Commit head=getHeadCommit();
+        Stage stage = readObject(STAGING_FILE,Stage.class);
+        String headBlobId=head.getBlobs().getOrDefault(fileName,"");
+        //如果文件内容与当前提交（HEAD 指向的提交）中的版本相同，移除其暂存状态（从 `addedFiles` 和 `removedFiles` 中移除）
+        if (headBlobId != null && headBlobId.equals(blobId)) {
+            // 从暂存区移除
+            stage.getAddedFiles().remove(fileName);
+            stage.getRemovedFiles().remove(fileName);
+        } else {
+            // 否则，把新 blob 添加到暂存区
             stage.addFile(fileName, blobId);
-            writeObject(STAGING_FILE, stage);
+            // 如果之前标记为删除，则取消删除状态
+            stage.getRemovedFiles().remove(fileName);
         }
-
+            writeObject(STAGING_FILE,stage);
     }
     public static void commit(String message){
     if (Objects.equals(message, "")){

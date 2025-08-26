@@ -1,1 +1,6 @@
 去去去112233
+cd C:\Users\ASUS\askeleton-sp21\proj2\gitlet
+del *.class
+javac *.java
+cd ..
+java -cp . gitlet.Main add test.txt

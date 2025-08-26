@@ -350,62 +350,36 @@ public class Repository {
         }
         sb.append("\n");
         //跟踪但被修改或删除（即当前提交里有但内容不同或已删除，且未暂存）
-        /**
-         * 跟踪但工作目录中修改或删除的文件（已 commit，但未 add）
-         *即：文件在 HEAD commit 里，但当前工作区内容和 commit 不同（内容变了）；或者文件被删除了。
-         * 如果该文件已经被 add 或 rm，则不显示在这里。
-         * 暂存添加但工作目录内容不同或删除的文件（已 add，但又被改动/删了，未再次 add）
-         * 即：你 add 后又编辑了文件（内容变了），或者 add 后删除了文件，但没有重新 add/rm。
-         * 这种情况下，暂存区内容和工作区内容不同，或者暂存区有该文件但工作区已无该文件。
-         * 简化版判定流程：
-         * 对每个已跟踪文件（HEAD commit blobs key）：
-         * 如果文件已 staged for add（暂存区 add），且暂存内容和工作区不同（或工作区已删除），则显示为 modified/deleted。
-         * 如果文件未 staged for add/rm（暂存区无），且工作区内容和 HEAD commit 不同（或已删除），则显示为 modified/deleted。
-         * 输出格式：[文件名] modified 或 [文件名] deleted
-         * */
         sb.append("=== Modifications Not Staged For Commit ===\n");
         List<String>cwdFiles = plainFilenamesIn(CWD);
         List<String> targetFiles = new ArrayList<>();
         //当前commit
         Commit currentCommit = getCommitFromId(readContentsAsString(join(BRANCHES_DIR,headBranch)));
         Map<String,String> currBlobs = currentCommit.getBlobs();
-        List<String> untrackedFiles = new ArrayList<>();
+        List<String> untrackedFiles = new ArrayList<>();//result2
         Set<String> stagedAddFiles  =  stage.getAddedFiles().keySet();
         List<String> stagedRmFiles = stage.getRemovedFiles();
-        for(String file:currBlobs.keySet()) {
-            //逐个检查文件
-            File cwdFile = join(CWD, file);
-            //deleted and not stored
-            boolean inCwd = cwdFile.exists();
-            boolean inAdd = stage.getAddedFiles().containsKey(file);
-            boolean inRemove = stage.getRemovedFiles().contains(file);
-            //在添加的情况下
-            if (!inCwd && inAdd) {
-                targetFiles.add(file + " (deleted)");
-            }
-            //和staging_area比较
-            if(inCwd&&inAdd){
-                byte[]contents = readContents(cwdFile);
-                String stagedBlobId = stage.getAddedFiles().get(file);
-                Blob stagedBlob = getBlobFromId(stagedBlobId);
-                if(!Arrays.equals(stagedBlob.getContent(), contents)){
-                    targetFiles.add(file + " (modified)");
+        List<String> modifiedFiles = new ArrayList<>();//result
+        List<String> stagedFiles = stage.getStagedFilename();
+        Set<String> headFiles = getHeadCommit().getBlobs().keySet();
+        Set<String>allFiles =new HashSet<>();
+        allFiles.addAll(headFiles);
+        allFiles.addAll(stagedFiles);
+        allFiles.addAll(cwdFiles);
+        for(String file:allFiles) {
+            if(cwdFiles.contains(file)){
+                if(stagedFiles.contains(file)||(headFiles.contains(file)&&!stagedFiles.contains(file))){
+                    modifiedFiles.add(file+" (deleted)");
+                }
+            }else {
+                //use three blobIds
+                String blobId = new Blob(file,CWD).getId();
+                String sBlobId=stage.getAddedFiles().getOrDefault(file,"");
+                String hBlobId=currentCommit.getBlobs().getOrDefault(file,"");
+                if(hBlobId != "" && sBlobId == "" && !blobId.equals(hBlobId) || (sBlobId != "" && !blobId.equals(sBlobId))) {
+                    modifiedFiles.add(file+" (modified)");
                 }
             }
-            //没有添加的情况下
-            if(!inAdd&&!inCwd){
-                targetFiles.add(file + " (deleted)");
-            }
-            //和head_commit比较
-            if(!inAdd&&inCwd){
-                String headCommitBlobId = getHeadCommit().getBlobs().get(file);
-                Blob headCommitBlob = getBlobFromId(headCommitBlobId);
-                byte[]contents = readContents(cwdFile);
-                if(!Arrays.equals(headCommitBlob.getContent(), contents)) {
-                    targetFiles.add(file + " (modified)");
-                }
-            }
-
         }
             Collections.sort(targetFiles);
             for (String s : targetFiles) {
@@ -414,8 +388,9 @@ public class Repository {
             sb.append("\n");
             //工作目录中存在但未跟踪（不在当前提交或暂存区）的文件
         sb.append("=== Untracked Files ===\n");
+
         for (String file : cwdFiles) {
-            if (!currBlobs.containsKey(file) && !stagedAddFiles.contains(file) && !stagedRmFiles.contains(file)) {
+            if (!stagedFiles.contains(file)&&!headFiles.contains(file)) {
                 untrackedFiles.add(file);
             }
         }

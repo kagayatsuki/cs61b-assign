@@ -3,4 +3,5 @@ cd C:\Users\ASUS\askeleton-sp21\proj2\gitlet
 del *.class
 javac *.java
 cd ..
-java -cp . gitlet.Main add test.txt
+java -cp . gitlet.Main add test.txt 
+2222

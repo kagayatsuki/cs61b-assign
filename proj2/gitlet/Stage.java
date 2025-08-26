@@ -34,4 +34,10 @@ public class Stage implements Serializable {
         addedFiles.clear();
         removedFiles.clear();
     }
+    public ArrayList<String> getStagedFilename() {
+        ArrayList<String> res = new ArrayList<>();
+        res.addAll(addedFiles.keySet());
+        res.addAll(removedFiles);
+        return res;
+    }
 }

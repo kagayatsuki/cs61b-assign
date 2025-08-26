@@ -62,51 +62,46 @@ public class Repository {
 
     }
     static void add(String fileName){
-        File file=join(CWD,fileName);
-        if(!file.exists()){
+        File file = join(CWD, fileName);
+        if (!file.exists()) {
             System.out.println("File does not exist");
             System.exit(0);
         }
-        //创建文件并写入文件夹
-        Blob blob=new Blob(fileName,CWD);
-        String blobId=blob.getId();
-        File blobFile = join(BLOBS_DIR, blobId);
-        writeObject(blobFile, blob);
 
-        Stage stage = new Stage();
-        if(STAGING_FILE.exists()){
-            stage=readObject(STAGING_FILE,Stage.class);
-        }
-        else {
-            stage=new Stage();
-        }
+        // 读取当前暂存区
+        Stage stage = STAGING_FILE.exists() ? readObject(STAGING_FILE, Stage.class) : new Stage();
 
-        if (!HEAD_FILE.exists()) {
-            stage=new Stage();
-        }
-        String headBranch=readContentsAsString(HEAD_FILE);
-        File branchFile = join(BRANCHES_DIR,headBranch);
+        // 获取当前分支和 HEAD commit
+        String headBranch = readContentsAsString(HEAD_FILE);
+        File branchFile = join(BRANCHES_DIR, headBranch);
         if (!branchFile.exists()) {
             System.out.println("Branch file not found: " + headBranch);
             System.exit(0);
         }
+        String commitId = readContentsAsString(branchFile);
+        Commit headCommit = readObject(join(COMMITS_DIR, commitId), Commit.class);
 
-        String commitId=readContentsAsString(branchFile);
-        Commit headCommit =readObject(join(COMMITS_DIR,commitId),Commit.class);//读取提交文件
-
-        String headBlobId=headCommit.getBlobs().getOrDefault(fileName,"");
-        String stageId=stage.getAddedFiles().getOrDefault(fileName,"");
-
-        //检查文件
-        if (blobId.equals(headBlobId)) {
-            if (!blobId.equals(stageId)) {
-                stage.removeFile(fileName);
+        // 获取 HEAD commit 中该文件的 blobId
+        String headBlobId = headCommit.getBlobs().getOrDefault(fileName, null);
+        
+        //如果文件内容与当前提交（HEAD 指向的提交）中的版本相同，移除其暂存状态（从 `addedFiles` 和 `removedFiles` 中移除）
+        if(headBlobId!=null){
+            Blob headBlob=getBlobFromId(headBlobId);
+            byte [] stagedContent=headBlob.getContent();
+            if(Arrays.equals(stagedContent,readContents(file))){
+                stage.getAddedFiles().remove(fileName);
+                stage.getRemovedFiles().remove(fileName);
                 writeObject(STAGING_FILE, stage);
+                return;
             }
-        } else if (!blobId.equals(stageId)) {
-            stage.addFile(fileName, blobId);
-            writeObject(STAGING_FILE, stage);
         }
+        Blob newBlob = new Blob(fileName,BLOBS_DIR );
+        File newBlobFile = join(BLOBS_DIR,newBlob.getId());
+        writeObject(newBlobFile,newBlob);
+        stage.getAddedFiles().put(fileName, newBlob.getId());
+        // 同时确保 removedFiles 里没有该文件
+        stage.getRemovedFiles().remove(fileName);
+        writeObject(STAGING_FILE, stage);
 
     }
     public static void commit(String message){
@@ -124,7 +119,7 @@ public class Repository {
     parents.add(head);
     Stage stage=readObject(STAGING_FILE,Stage.class);
     if(stage.isEmpty()){
-        System.out.println("Stage is empty");
+        System.out.println("No changes added to the commit.");
         System.exit(0);
     }
     Commit newCommit=new Commit(message,parents,stage);

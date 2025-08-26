@@ -40,6 +40,7 @@ public class Commit implements Serializable {
         this.blobs = new HashMap<String,String>();
         this.id = sha1(message,timestamp.toString());//生成哈希
     }
+
     public Commit(String message,List<Commit> parents,Stage stage){
         this.message = message;
         this.timestamp = new Date();//当前时间
@@ -77,6 +78,11 @@ public class Commit implements Serializable {
     public Map<String,String> getBlobs(){
         return blobs;
     }
+    public String getDateString() {
+        // Thu Nov 9 20:00:05 2017 -0800
+        DateFormat df = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z", Locale.ENGLISH);
+        return df.format(timestamp);
+    }//use this format
     public String getCommitAsString(){
         StringBuilder sb = new StringBuilder();
         sb.append("===\n");
@@ -84,8 +90,7 @@ public class Commit implements Serializable {
         if(parents.size()==2) {
             sb.append("Merge: "+parents.get(0).substring(0,7)+parents.get(1).substring(0,7)+"\n");
         }//合并提交的情况
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        sb.append("Date: ").append(sdf.format(this.timestamp)).append("\n");
+        sb.append("Date: ").append(this.getDateString()).append("\n");
         sb.append(this.getMessage()+"\n\n");
         return sb.toString();
     }

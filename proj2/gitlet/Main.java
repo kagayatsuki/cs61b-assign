@@ -92,8 +92,12 @@ private static final Set<String> Operands=new HashSet<>(Set.of( "init", "add", "
                 repo.checkCommand(args.length,1);
                 repo.status();
                 break;
+            case "merge":
+                repo.checkCommand(args.length,2);
+                repo.merge(args[1]);
+                break;
             default:
-                System.out.println("Unknown command.");
+                System.out.println("No command with that name exists.");
                 System.exit(0);
         }
     }

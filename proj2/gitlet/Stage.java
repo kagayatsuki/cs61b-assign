@@ -17,20 +17,20 @@ public class Stage implements Serializable {
         addedFiles.put(file, fileId);
         removedFiles.remove(file);
     }
-    public boolean isEmpty(){
+    public boolean isEmpty() {
         return addedFiles.isEmpty() && removedFiles.isEmpty();
     }
     public void removeFile(String file) {
         removedFiles.add(file);
         addedFiles.remove(file);
     }
-    public Map<String,String>getAddedFiles(){
+    public Map<String,String> getAddedFiles() {
         return addedFiles;
     }
-    public List<String>getRemovedFiles(){
+    public List<String> getRemovedFiles() {
         return removedFiles;
     }
-    public void clear(){
+    public void clear() {
         addedFiles.clear();
         removedFiles.clear();
     }

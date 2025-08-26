@@ -9,31 +9,31 @@ public class Blob implements Serializable {
     private String fileName;
     private byte[] content;
     private String Id;
-    public Blob(String fileName, File CWD){
+    public Blob(String fileName, File CWD) {
         this.fileName = fileName;
-        File file=join(CWD,fileName);
-        if(file.exists()){
+        File file = join(CWD, fileName);
+        if (file.exists()){
             this.content = readContents(file);
-            this.Id=sha1(fileName,content);
+            this.Id = sha1(fileName,content);
         }
-        else{
+        else {
             this.content = null;
-            this.Id=sha1(fileName);
+            this.Id = sha1(fileName);
         }
     }
-    public boolean exists(){
-        return this.content!=null;
+    public boolean exists() {
+        return this.content != null;
     }
-    public String getFileName(){
+    public String getFileName() {
         return this.fileName;
     }
-    public byte[] getContent(){
+    public byte[] getContent() {
         return this.content;
     }
-    public String getId(){
+    public String getId() {
         return this.Id;
     }
-    public String getContentAsString(){
+    public String getContentAsString() {
         return new String(this.content);
     }
 }

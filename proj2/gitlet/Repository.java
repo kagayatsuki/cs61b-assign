@@ -277,24 +277,24 @@ public class Repository {
     }
 
     private void selectFilesAndDelete(String commitId, Commit currentCommit) {
-        commitId=getFullCommitId(commitId);
-        Commit targetCommit=getCommitFromId(commitId);
+        commitId = getFullCommitId(commitId);
+        Commit targetCommit = getCommitFromId(commitId);
         //最难的一步，检查文件，使用map,如果原来的目录里面有新目录没有的文件，抛出错误
-        List<String> cwdFiles=plainFilenamesIn(CWD);
-        Map<String,String> currBlobs=currentCommit.getBlobs();
-        Map<String,String> targetBlobs=targetCommit.getBlobs();
+        List<String> cwdFiles = plainFilenamesIn(CWD);
+        Map<String,String> currBlobs = currentCommit.getBlobs();
+        Map<String,String> targetBlobs = targetCommit.getBlobs();
         for(String cwdFile:cwdFiles){
             if(!currBlobs.containsKey(cwdFile)&&targetBlobs.containsKey(cwdFile)){
-                System.out.println("There is an untracked file in the way; delete it, or add and commit it first."+cwdFile);
+                System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
                 System.exit(0);
             }
         }
         //写入目标文件，注意blobId的处理以及加入的判断条件
         for(String file:targetBlobs.keySet()){
-            String blobId=targetBlobs.get(file);
-            Blob blob=getBlobFromId(blobId);
-            File file1=join(CWD,file);
-            if(file1.exists()){
+            String blobId = targetBlobs.get(file);
+            Blob blob = getBlobFromId(blobId);
+            File file1 = join(CWD,file);
+            if(file1.exists()) {
                 file1.delete();
             }
             if (blob != null) {
@@ -304,39 +304,39 @@ public class Repository {
         //删除当前分支跟踪但目标分支不跟踪的文件
         for(String file:currBlobs.keySet()){
             if(!targetBlobs.containsKey(file)){
-                File file1=join(CWD,file);
+                File file1 = join(CWD,file);
                 if(file1.exists()){
                     file1.delete();
                 }
             }
         }
         //清除暂存区，记住！！！
-        Stage stage=new Stage();
+        Stage stage = new Stage();
         writeObject(STAGING_FILE,stage);
     }
 
     public void find(String message){
         StringBuilder sb = new StringBuilder();
-        List<String> Files=plainFilenamesIn(COMMITS_DIR);
+        List<String> Files = plainFilenamesIn(COMMITS_DIR);
         for(String file:Files){
-            Commit commit=getCommitFromId(file);
+            Commit commit = getCommitFromId(file);
             if(commit.getMessage().contains(message)){
                 sb.append(commit.getId()+"\n");
             }
         }
-        if(sb.length()==0){
+        if(sb.length() == 0) {
             System.out.println("Found no commit with that message.");
             System.exit(0);
         }
         System.out.println(sb);
     }
 
-    public void status(){
+    public void status() {
         StringBuilder sb = new StringBuilder();
         sb.append("=== Branches ===\n");
-        String headBranch=readContentsAsString(HEAD_FILE);
+        String headBranch = readContentsAsString(HEAD_FILE);
         //先遍历，打印
-        List<String> branches=plainFilenamesIn(BRANCHES_DIR);
+        List<String> branches = plainFilenamesIn(BRANCHES_DIR);
         Collections.sort(branches);
         for(String branch:branches){
             if(branch.equals(headBranch)){
@@ -350,9 +350,9 @@ public class Repository {
         //    private Map<String, String> addedFiles; 文件名 -> blob SHA-1 ID，一一对应
         //    private List<String> removedFiles;
         sb.append("=== Staged Files ===\n");
-        Stage stage=readObject(STAGING_FILE,Stage.class);
+        Stage stage = readObject(STAGING_FILE,Stage.class);
         //注意这里要按字典序
-        List<String>files=new ArrayList<>(stage.getAddedFiles().keySet());
+        List<String>files = new ArrayList<>(stage.getAddedFiles().keySet());
         Collections.sort(files);
         for(String file:files){
             sb.append(file+"\n");
@@ -360,7 +360,7 @@ public class Repository {
         sb.append("\n");
 
         sb.append("=== Removed Files ===\n");
-        List<String>result=stage.getRemovedFiles();
+        List<String>result = stage.getRemovedFiles();
         Collections.sort(result);
         for (String file:result){
             sb.append(file+"\n");
@@ -381,30 +381,30 @@ public class Repository {
          * 输出格式：[文件名] modified 或 [文件名] deleted
          * */
         sb.append("=== Modifications Not Staged For Commit ===\n");
-        List<String>cwdFiles=plainFilenamesIn(CWD);
-        List<String> targetFiles=new ArrayList<>();
+        List<String>cwdFiles = plainFilenamesIn(CWD);
+        List<String> targetFiles = new ArrayList<>();
         //当前commit
-        Commit currentCommit=getCommitFromId(readContentsAsString(join(BRANCHES_DIR,headBranch)));
-        Map<String,String> currBlobs=currentCommit.getBlobs();
-        List<String> untrackedFiles=new ArrayList<>();
-        Set<String> stagedAddFiles = stage.getAddedFiles().keySet();
+        Commit currentCommit = getCommitFromId(readContentsAsString(join(BRANCHES_DIR,headBranch)));
+        Map<String,String> currBlobs = currentCommit.getBlobs();
+        List<String> untrackedFiles = new ArrayList<>();
+        Set<String> stagedAddFiles  =  stage.getAddedFiles().keySet();
         List<String> stagedRmFiles = stage.getRemovedFiles();
         for(String file:currBlobs.keySet()) {
             //逐个检查文件
             File cwdFile = join(CWD, file);
             //deleted and not stored
-            boolean inCwd=cwdFile.exists();
-            boolean inAdd=stage.getAddedFiles().containsKey(file);
-            boolean inRemove=stage.getRemovedFiles().contains(file);
+            boolean inCwd = cwdFile.exists();
+            boolean inAdd = stage.getAddedFiles().containsKey(file);
+            boolean inRemove = stage.getRemovedFiles().contains(file);
             //在添加的情况下
             if (!inCwd && inAdd) {
                 targetFiles.add(file + " (deleted)");
             }
             //和staging_area比较
             if(inCwd&&inAdd){
-                byte[]contents=readContents(cwdFile);
-                String stagedBlobId=stage.getAddedFiles().get(file);
-                Blob stagedBlob=getBlobFromId(stagedBlobId);
+                byte[]contents = readContents(cwdFile);
+                String stagedBlobId = stage.getAddedFiles().get(file);
+                Blob stagedBlob = getBlobFromId(stagedBlobId);
                 if(!Arrays.equals(stagedBlob.getContent(), contents)){
                     targetFiles.add(file + " (modified)");
                 }
@@ -415,17 +415,17 @@ public class Repository {
             }
             //和head_commit比较
             if(!inAdd&&inCwd){
-                String headCommitBlobId=getHeadCommit().getBlobs().get(file);
-                Blob headCommitBlob=getBlobFromId(headCommitBlobId);
-                byte[]contents=readContents(cwdFile);
-                if(!Arrays.equals(headCommitBlob.getContent(), contents)){
+                String headCommitBlobId = getHeadCommit().getBlobs().get(file);
+                Blob headCommitBlob = getBlobFromId(headCommitBlobId);
+                byte[]contents = readContents(cwdFile);
+                if(!Arrays.equals(headCommitBlob.getContent(), contents)) {
                     targetFiles.add(file + " (modified)");
                 }
             }
 
         }
             Collections.sort(targetFiles);
-            for (String s:targetFiles){
+            for (String s : targetFiles) {
                 sb.append(s+"\n");
             }
             sb.append("\n");

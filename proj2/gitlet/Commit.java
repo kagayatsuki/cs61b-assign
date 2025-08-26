@@ -38,24 +38,24 @@ public class Commit implements Serializable {
         this.timestamp = new Date(0);
         this.parents = new LinkedList<>();
         this.blobs = new HashMap<String,String>();
-        this.id = sha1(message,timestamp.toString());//生成哈希
+        this.id = sha1 (message,timestamp.toString());//生成哈希
     }
 
-    public Commit(String message,List<Commit> parents,Stage stage){
+    public Commit(String message,List<Commit> parents,Stage stage) {
         this.message = message;
         this.timestamp = new Date();//当前时间
-        this.parents =new ArrayList<>(2);
+        this.parents = new ArrayList<>(2);
         for(Commit p:parents){
         this.parents.add(p.getId());
         }
-        this.blobs=parents.get(0).getBlobs();
+        this.blobs = parents.get(0).getBlobs();
 
         for (Map.Entry<String, String> item : stage.getAddedFiles().entrySet()) {
             String filename = item.getKey();
             String blobId = item.getValue();
             blobs.put(filename, blobId);
         }
-        for (String fileName :stage.getRemovedFiles()){
+        for (String fileName :stage.getRemovedFiles()) {
             blobs.remove(fileName);
         }
         this.id = sha1(message,timestamp.toString(),parents.toString(),blobs.toString());
@@ -63,19 +63,19 @@ public class Commit implements Serializable {
 
 
 
-    public String getId(){
+    public String getId() {
         return id;
     }
-    public String getMessage(){
+    public String getMessage() {
         return message;
     }
-    public Date getTimestamp(){
+    public Date getTimestamp() {
         return timestamp;
     }
-    public List<String> getParents(){
+    public List<String> getParents() {
         return parents;
     }
-    public Map<String,String> getBlobs(){
+    public Map<String,String> getBlobs() {
         return blobs;
     }
     public String getDateString() {
@@ -83,12 +83,12 @@ public class Commit implements Serializable {
         DateFormat df = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z", Locale.ENGLISH);
         return df.format(timestamp);
     }//use this format
-    public String getCommitAsString(){
+    public String getCommitAsString() {
         StringBuilder sb = new StringBuilder();
         sb.append("===\n");
-        sb.append("commit "+this.id+"\n");
+        sb.append("commit " + this.id+"\n");
         if(parents.size()==2) {
-            sb.append("Merge: "+parents.get(0).substring(0,7)+parents.get(1).substring(0,7)+"\n");
+            sb.append("Merge: " + parents.get(0).substring(0,7) + parents.get(1).substring(0,7)+"\n");
         }//合并提交的情况
         sb.append("Date: ").append(this.getDateString()).append("\n");
         sb.append(this.getMessage()+"\n\n");

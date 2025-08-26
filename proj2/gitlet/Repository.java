@@ -97,16 +97,15 @@ public class Repository {
         String headBlobId=headCommit.getBlobs().getOrDefault(fileName,"");
         String stageId=stage.getAddedFiles().getOrDefault(fileName,"");
 
-        //如果文件内容与当前提交（HEAD 指向的提交）中的版本相同，移除其暂存状态（从 `addedFiles` 和 `removedFiles` 中移除）
-        if(headBlobId!=null){
-            Blob headBlob=getBlobFromId(headBlobId);
-            byte [] stagedContent=headBlob.getContent();
-            if(Arrays.equals(stagedContent,readContents(file))){
-                stage.getAddedFiles().remove(fileName);
-                stage.getRemovedFiles().remove(fileName);
+        //检查文件
+        if (blobId.equals(headBlobId)) {
+            if (!blobId.equals(stageId)) {
+                stage.removeFile(fileName);
                 writeObject(STAGING_FILE, stage);
-                return;
             }
+        } else if (!blobId.equals(stageId)) {
+            stage.addFile(fileName, blobId);
+            writeObject(STAGING_FILE, stage);
         }
 
     }
@@ -286,7 +285,7 @@ public class Repository {
         Map<String,String> targetBlobs=targetCommit.getBlobs();
         for(String cwdFile:cwdFiles){
             if(!currBlobs.containsKey(cwdFile)&&targetBlobs.containsKey(cwdFile)){
-                System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                System.out.println("There is an untracked file in the way; delete it, or add and commit it first."+cwdFile);
                 System.exit(0);
             }
         }

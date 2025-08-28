@@ -154,7 +154,7 @@ public class Repository {
             if (headCommit.getParents() == null || headCommit.getParents().isEmpty()) {
                 break;
             }
-            headCommit=getCommitFromId(headCommit.getParents().get(0));
+            headCommit=getCommitFromId(headCommit.getFirstParentId());
         }
         System.out.println(log);
     }
@@ -436,18 +436,13 @@ public class Repository {
             return;
         }
 
-        Commit mergedCommit=mergeWithLCA(splitPoint,targetCommitId,currCommitId,headBranchName,branchName);
-        writeCommitToFile(mergedCommit);
-        //更新指针
-        File currBranchFile=join(BRANCHES_DIR,headBranchName);
-        writeContents(currBranchFile,mergedCommit.getId());
-        stage=new Stage();
-        writeObject(STAGING_FILE,stage);
+        mergeWithLCA(splitPoint,targetCommitId,currCommitId,headBranchName,branchName);
+
     }
     /**
     * Below are some functions assist me in programming.
     * */
-    private Commit mergeWithLCA(String splitPoint, String targetCommitId,String currCommitId,String curBranch,String targetBranch){
+    private void mergeWithLCA(String splitPoint, String targetCommitId,String currCommitId,String curBranch,String targetBranch){
         //get all the files first
         Commit splitCommit=getCommitFromId(splitPoint);
         Commit targetCommit=getCommitFromId(targetCommitId);
@@ -526,12 +521,19 @@ public class Repository {
         mergedCommits.add(getCommitFromBranch(curBranch));
         mergedCommits.add(getCommitFromBranch(targetBranch));
         Commit mergedCommit=new Commit(mergeMessage,mergedCommits,readObject(STAGING_FILE,Stage.class));
-
-
         if(hasConflict){
             System.out.println("Encountered a merge conflict.");
         }
-        return mergedCommit;
+        writeCommitToFile(mergedCommit);
+
+        //更新指针
+        File currBranchFile=join(BRANCHES_DIR,curBranch);
+        writeContents(currBranchFile,mergedCommit.getId());
+        Stage stage=new Stage();
+        writeObject(STAGING_FILE,stage);
+
+
+
     }
     private void dfs(String commitId,Set<String>ancestors){
         //如果回溯到了尽头（即已经到达自身）

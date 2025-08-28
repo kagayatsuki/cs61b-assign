@@ -72,6 +72,12 @@ public class Commit implements Serializable {
     public Date getTimestamp() {
         return timestamp;
     }
+    public String getFirstParentId(){
+        if(parents.isEmpty()){
+            return null;
+        }
+        return parents.get(0);
+    }
     public List<String> getParents() {
         return parents;
     }
@@ -88,7 +94,7 @@ public class Commit implements Serializable {
         sb.append("===\n");
         sb.append("commit " + this.id+"\n");
         if(parents.size()==2) {
-            sb.append("Merge: " + parents.get(0).substring(0,7) + parents.get(1).substring(0,7)+"\n");
+            sb.append("Merge: " + parents.get(0).substring(0,7) + " " + parents.get(1).substring(0,7)+"\n");
         }//合并提交的情况
         sb.append("Date: ").append(this.getDateString()).append("\n");
         sb.append(this.getMessage()+"\n\n");

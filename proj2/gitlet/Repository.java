@@ -379,8 +379,8 @@ public class Repository {
         allFiles.addAll(stagedFiles);
         allFiles.addAll(cwdFiles);
         for(String file:allFiles) {
-            if(cwdFiles.contains(file)){
-                if(stagedFiles.contains(file)||(headFiles.contains(file)&&!stagedFiles.contains(file))){
+            if(!cwdFiles.contains(file)){
+                if(stagedAddFiles.contains(file)||(headFiles.contains(file)&&!stagedFiles.contains(file))){
                     modifiedFiles.add(file+" (deleted)");
                 }
             }else {
@@ -388,7 +388,7 @@ public class Repository {
                 String blobId = new Blob(file,CWD).getId();
                 String sBlobId=stage.getAddedFiles().getOrDefault(file,"");
                 String hBlobId=currentCommit.getBlobs().getOrDefault(file,"");
-                if(hBlobId != "" && sBlobId == "" && !blobId.equals(hBlobId) || (sBlobId != "" && !blobId.equals(sBlobId))) {
+                if((hBlobId != "" && sBlobId == "" && !blobId.equals(hBlobId)) || (sBlobId != "" && !blobId.equals(sBlobId))) {
                     modifiedFiles.add(file+" (modified)");
                 }
             }

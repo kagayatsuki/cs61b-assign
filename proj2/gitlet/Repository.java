@@ -512,7 +512,7 @@ public class Repository {
                 continue;
             }
             //8.两分支不同修改（包括删除）：生成冲突文件
-            else if (inSplit&&!splitBlobId.equals(currBlobId)&&!splitBlobId.equals(targetBlobId)&&!currBlobId.equals(targetBlobId)) {
+            else if (inSplit&&!Objects.equals(splitBlobId,currBlobId)&&!Objects.equals(splitBlobId,targetBlobId)&&!Objects.equals(currBlobId,targetBlobId)) {
                 hasConflict = true;
                 File conflictFile = join(CWD, file);
                 StringBuilder conflictFileContent = new StringBuilder();

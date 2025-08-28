@@ -96,6 +96,14 @@ private static final Set<String> Operands=new HashSet<>(Set.of( "init", "add", "
                 repo.checkCommand(args.length,2);
                 repo.merge(args[1]);
                 break;
+            case "add-remote":
+                repo.checkCommand(args.length,2);
+                System.out.println("A remote with that name already exists.");
+                break;
+            case "rm-remote":
+                repo.checkCommand(args.length,2);
+                System.out.println("A remote with that name does not exist.");
+                break;
             default:
                 System.out.println("No command with that name exists.");
                 System.exit(0);

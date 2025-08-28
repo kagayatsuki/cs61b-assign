@@ -436,13 +436,18 @@ public class Repository {
             return;
         }
 
-        mergeWithLCA(splitPoint,targetCommitId,currCommitId,headBranchName,branchName);
-
+        Commit mergedCommit=mergeWithLCA(splitPoint,targetCommitId,currCommitId,headBranchName,branchName);
+        writeCommitToFile(mergedCommit);
+        //更新指针
+        File currBranchFile=join(BRANCHES_DIR,headBranchName);
+        writeContents(currBranchFile,mergedCommit.getId());
+        stage=new Stage();
+        writeObject(STAGING_FILE,stage);
     }
     /**
     * Below are some functions assist me in programming.
     * */
-    private void mergeWithLCA(String splitPoint, String targetCommitId,String currCommitId,String curBranch,String targetBranch){
+    private Commit mergeWithLCA(String splitPoint, String targetCommitId,String currCommitId,String curBranch,String targetBranch){
         //get all the files first
         Commit splitCommit=getCommitFromId(splitPoint);
         Commit targetCommit=getCommitFromId(targetCommitId);
@@ -521,17 +526,12 @@ public class Repository {
         mergedCommits.add(getCommitFromBranch(curBranch));
         mergedCommits.add(getCommitFromBranch(targetBranch));
         Commit mergedCommit=new Commit(mergeMessage,mergedCommits,readObject(STAGING_FILE,Stage.class));
-        writeCommitToFile(mergedCommit);
-        //更新指针
-        File currBranchFile=join(BRANCHES_DIR,curBranch);
-        writeContents(currBranchFile,mergedCommit.getId());
-        Stage stage=new Stage();
-        writeObject(STAGING_FILE,stage);
+
 
         if(hasConflict){
             System.out.println("Encountered a merge conflict.");
         }
-
+        return mergedCommit;
     }
     private void dfs(String commitId,Set<String>ancestors){
         //如果回溯到了尽头（即已经到达自身）

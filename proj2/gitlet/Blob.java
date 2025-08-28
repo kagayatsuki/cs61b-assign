@@ -2,6 +2,7 @@ package gitlet;
 
 import java.io.File;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 
 import static gitlet.Utils.*;
 
@@ -34,6 +35,6 @@ public class Blob implements Serializable {
         return this.Id;
     }
     public String getContentAsString() {
-        return new String(this.content);
+        return new String(this.content, StandardCharsets.UTF_8);
     }
 }

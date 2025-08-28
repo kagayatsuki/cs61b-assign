@@ -258,7 +258,19 @@ public class Repository {
         writeContents(branchFile,commitId);
 
     }
-
+    //未跟踪的文件：1.存在在CWD里面。2.文件不在当前提交或stage区域
+    private List<String> getUntrackedFiles(){
+        List<String> untrackedFiles=new ArrayList<>();
+        List<String> stageFiles=readObject(STAGING_FILE,Stage.class).getStagedFilename();
+        Set<String> headFileLists=getHeadCommit().getBlobs().keySet();
+        for(String headFile:plainFilenamesIn(CWD)){
+            if(!headFileLists.contains(headFile)&&stageFiles.contains(headFile)){
+                untrackedFiles.add(headFile);
+            }
+        }
+        Collections.sort(untrackedFiles);
+        return untrackedFiles;
+    }
     private void selectFilesAndDelete(String commitId, Commit currentCommit) {
         commitId = getFullCommitId(commitId);
         Commit targetCommit = getCommitFromId(commitId);
@@ -435,7 +447,16 @@ public class Repository {
             System.out.println("Given branch is an ancestor of the current branch.");
             return;
         }
-
+        //check untracked
+        List<String>untrackedFiles = getUntrackedFiles();
+        List<String> cwdFiles = plainFilenamesIn(CWD);
+        Set<String> targetFiles = getCommitFromBranch(branchName).getBlobs().keySet();
+        for(String file:cwdFiles){
+            if(untrackedFiles.contains(file)&&!targetFiles.contains(file)){
+                System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                return;
+            }
+        }
         mergeWithLCA(splitPoint,targetCommitId,currCommitId,headBranchName,branchName);
 
     }
@@ -651,6 +672,15 @@ public class Repository {
             System.exit(0);
         }
     }
-
+    public boolean checkIsInit(){
+        File init=join(CWD,".gitlet");
+        return init.exists()&&init.isDirectory();
+    }
+    public void checkInit(){
+        if(!checkIsInit()){
+            System.out.println("Not in an initialized Gitlet directory.");
+            System.exit(0);
+        }
+    }
 
 }

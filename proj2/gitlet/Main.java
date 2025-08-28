@@ -35,22 +35,27 @@ private static final Set<String> Operands=new HashSet<>(Set.of( "init", "add", "
                 break;
             case "add":
                 repo.checkCommand(args.length,2);
+                repo.checkInit();
                 add(args[1]);
                 break;
             // TODO: FILL THE REST IN
             case "commit":
                 repo.checkCommand(args.length,2);
+                repo.checkInit();
                 commit(args[1]);
                 break;
             case "rm":
                 repo.checkCommand(args.length,2);
                 remove(args[1]);
+                repo.checkInit();
                 break;
             case "log":
                 repo.checkCommand(args.length,1);
+                repo.checkInit();
                 log();
                 break;
             case "checkout":
+                repo.checkInit();
                 if (args.length < 2||args.length > 4) {
                     System.out.println("Incorrect operands.");
                     System.exit(0);
@@ -70,30 +75,37 @@ private static final Set<String> Operands=new HashSet<>(Set.of( "init", "add", "
                 break;
             case "branch":
                 repo.checkCommand(args.length,2);
+                repo.checkInit();
                 repo.branch(args[1]);
                 break;
             case "rm-branch":
                 repo.checkCommand(args.length,2);
+                repo.checkInit();
                 repo.reBranch(args[1]);
                 break;
             case "reset":
                 repo.checkCommand(args.length,2);
+                repo.checkInit();
                 repo.reset(args[1]);
                 break;
             case "global-log":
                 repo.checkCommand(args.length,1);
+                repo.checkInit();
                 repo.globalLog();
                 break;
             case "find":
                 repo.checkCommand(args.length,2);
+                repo.checkInit();
                 repo.find(args[1]);
                 break;
             case "status":
                 repo.checkCommand(args.length,1);
+                repo.checkInit();
                 repo.status();
                 break;
             case "merge":
                 repo.checkCommand(args.length,2);
+                repo.checkInit();
                 repo.merge(args[1]);
                 break;
             case "add-remote":

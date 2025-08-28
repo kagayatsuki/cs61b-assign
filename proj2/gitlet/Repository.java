@@ -264,7 +264,7 @@ public class Repository {
         List<String> stageFiles=readObject(STAGING_FILE,Stage.class).getStagedFilename();
         Set<String> headFileLists=getHeadCommit().getBlobs().keySet();
         for(String headFile:plainFilenamesIn(CWD)){
-            if(!headFileLists.contains(headFile)&&stageFiles.contains(headFile)){
+            if(!headFileLists.contains(headFile)&&!stageFiles.contains(headFile)){
                 untrackedFiles.add(headFile);
             }
         }
@@ -368,7 +368,7 @@ public class Repository {
         //当前commit
         Commit currentCommit = getCommitFromId(readContentsAsString(join(BRANCHES_DIR,headBranch)));
         Map<String,String> currBlobs = currentCommit.getBlobs();
-        List<String> untrackedFiles = new ArrayList<>();//result2
+        List<String> untrackedFiles = getUntrackedFiles();//result2
         Set<String> stagedAddFiles  =  stage.getAddedFiles().keySet();
         List<String> stagedRmFiles = stage.getRemovedFiles();
         List<String> modifiedFiles = new ArrayList<>();//result
@@ -400,13 +400,6 @@ public class Repository {
             sb.append("\n");
             //工作目录中存在但未跟踪（不在当前提交或暂存区）的文件
         sb.append("=== Untracked Files ===\n");
-
-        for (String file : cwdFiles) {
-            if (!stagedFiles.contains(file)&&!headFiles.contains(file)) {
-                untrackedFiles.add(file);
-            }
-        }
-        Collections.sort(untrackedFiles);
         for (String s:untrackedFiles){
             sb.append(s+"\n");
         }
@@ -452,7 +445,7 @@ public class Repository {
         List<String> cwdFiles = plainFilenamesIn(CWD);
         Set<String> targetFiles = getCommitFromBranch(branchName).getBlobs().keySet();
         for(String file:cwdFiles){
-            if(untrackedFiles.contains(file)&&!targetFiles.contains(file)){
+            if(untrackedFiles.contains(file)&&targetFiles.contains(file)){
                 System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
                 return;
             }
